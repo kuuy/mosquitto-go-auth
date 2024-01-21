@@ -24,6 +24,7 @@ type remoteJWTChecker struct {
 	userAgent     string
 	host          string
 	port          string
+	bearer        string
 	hostWhitelist []string
 	withTLS       bool
 	verifyPeer    bool
@@ -138,6 +139,12 @@ func NewRemoteJWTChecker(authOpts map[string]string, options tokenOptions, versi
 	} else {
 		remoteOk = false
 		missingOpts += " jwt_port"
+	}
+
+	if bearer, ok := authOpts["jwt_bearer"]; ok {
+		checker.bearer = bearer
+	} else {
+		checker.bearer = "Bearer"
 	}
 
 	if withTLS, ok := authOpts["jwt_with_tls"]; ok && withTLS == "true" {
@@ -313,7 +320,7 @@ func (o *remoteJWTChecker) jwtRequest(uri, token string, dataMap map[string]inte
 		}
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("%s %s", o.bearer, token))
 
 	resp, err = o.client.Do(req)
 
